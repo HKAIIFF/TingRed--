@@ -1,0 +1,1353 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术原理 - 听.Red 音律调运系统</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500;700;900&family=Orbitron:wght@400;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-red: #cc2936;
+            --secondary-red: #8b1538;
+            --accent-gold: #d4af37;
+            --dark-gold: #b8860b;
+            --deep-black: #0d0d0d;
+            --soft-black: #1a1a1a;
+            --warm-gray: #2c2c2c;
+            --text-light: #ecf0f1;
+            --text-gold: #f4e4bc;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+            background: radial-gradient(circle at 20% 80%, rgba(204, 41, 54, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                        linear-gradient(135deg, var(--deep-black) 0%, var(--soft-black) 50%, #2c1810 100%);
+            color: var(--text-light);
+            overflow-x: hidden;
+        }
+
+        .logo-font {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            letter-spacing: 3px;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold), var(--primary-red));
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: logoGlow 4s ease-in-out infinite, gradientShift 5s ease-in-out infinite;
+        }
+        
+        @keyframes logoGlow {
+            0%, 100% { 
+                text-shadow: 0 0 20px rgba(204, 41, 54, 0.5);
+                transform: scale(1);
+            }
+            50% { 
+                text-shadow: 0 0 40px rgba(204, 41, 54, 0.8), 0 0 60px rgba(212, 175, 55, 0.6);
+                transform: scale(1.02);
+            }
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .logo-symbol {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 6px 20px rgba(204, 41, 54, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .logo-symbol::before {
+            content: '听';
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .navbar {
+            background: rgba(13, 13, 13, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(204, 41, 54, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .section {
+            padding: 6rem 0;
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            font-size: 1.4rem;
+            color: var(--text-gold);
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(204, 41, 54, 0.3);
+            border-radius: 20px;
+            transition: all 0.4s ease;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 25px 60px rgba(204, 41, 54, 0.3);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 3rem;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 1rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--primary-red), var(--accent-gold));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 3rem;
+            padding-left: 2rem;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.5rem;
+            top: 0.5rem;
+            width: 1rem;
+            height: 1rem;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.3);
+        }
+
+        .frequency-display {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            border: 1px solid rgba(204, 41, 54, 0.3);
+        }
+
+        .frequency-wave {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 2px,
+                rgba(212, 175, 55, 0.3) 2px,
+                rgba(212, 175, 55, 0.3) 4px
+            );
+            animation: waveFlow 3s linear infinite;
+        }
+
+        @keyframes waveFlow {
+            0% { transform: translateX(-20px); }
+            100% { transform: translateX(20px); }
+        }
+
+        .frequency-bars {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 0 2rem;
+        }
+
+        .freq-bar {
+            width: 4px;
+            background: linear-gradient(0deg, var(--primary-red), var(--accent-gold));
+            border-radius: 2px;
+            animation: freqPulse 2s ease-in-out infinite;
+        }
+
+        .freq-bar:nth-child(1) { height: 20%; animation-delay: 0s; }
+        .freq-bar:nth-child(2) { height: 40%; animation-delay: 0.1s; }
+        .freq-bar:nth-child(3) { height: 60%; animation-delay: 0.2s; }
+        .freq-bar:nth-child(4) { height: 80%; animation-delay: 0.3s; }
+        .freq-bar:nth-child(5) { height: 70%; animation-delay: 0.4s; }
+        .freq-bar:nth-child(6) { height: 50%; animation-delay: 0.5s; }
+        .freq-bar:nth-child(7) { height: 30%; animation-delay: 0.6s; }
+
+        @keyframes freqPulse {
+            0%, 100% { transform: scaleY(0.5); opacity: 0.7; }
+            50% { transform: scaleY(1.2); opacity: 1; }
+        }
+
+        .ancient-symbol {
+            position: absolute;
+            opacity: 0.1;
+            font-size: 8rem;
+            color: var(--accent-gold);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .principle-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(204, 41, 54, 0.3);
+            border-radius: 20px;
+            padding: 2.5rem;
+            text-align: center;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .principle-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(212, 175, 55, 0.1), transparent);
+            animation: rotate 6s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .principle-card:hover::after {
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .principle-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--accent-gold);
+            box-shadow: 0 20px 50px rgba(204, 41, 54, 0.3);
+        }
+
+        .principle-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: iconFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes iconFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .algorithm-flow {
+            position: relative;
+            padding: 3rem 0;
+        }
+
+        .flow-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .flow-step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .flow-step::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: -1.5rem;
+            width: 2px;
+            height: 3rem;
+            background: linear-gradient(180deg, var(--accent-gold), var(--primary-red));
+            transform: translateX(-50%);
+        }
+
+        .flow-step:last-child::after {
+            display: none;
+        }
+
+        .step-number {
+            width: 4rem;
+            height: 4rem;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: white;
+            margin: 0 2rem;
+            flex-shrink: 0;
+            box-shadow: 0 10px 30px rgba(204, 41, 54, 0.4);
+        }
+
+        .step-content {
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .data-visual {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 1px solid rgba(204, 41, 54, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .data-stream {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.3;
+        }
+
+        .stream-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent-gold), transparent);
+            animation: dataFlow 4s linear infinite;
+        }
+
+        @keyframes dataFlow {
+            0% { left: -100%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { left: 100%; opacity: 0; }
+        }
+
+        .comparison-table {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(204, 41, 54, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        .comparison-table th {
+            background: rgba(204, 41, 54, 0.2);
+            padding: 1rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(204, 41, 54, 0.1);
+        }
+
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .research-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(204, 41, 54, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            transition: all 0.4s ease;
+        }
+
+        .research-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-gold);
+            box-shadow: 0 15px 40px rgba(204, 41, 54, 0.2);
+        }
+
+        .institution-logo {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--primary-red), var(--accent-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .section-title {
+                font-size: 2.5rem;
+            }
+            
+            .flow-step {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .flow-step:nth-child(even) {
+                flex-direction: column;
+            }
+            
+            .step-number {
+                margin: 1rem 0;
+            }
+            
+            .timeline {
+                padding-left: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar fixed w-full z-50 px-4 py-3">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="logo-symbol"></div>
+                <div>
+                    <div class="logo-font text-2xl">Red</div>
+                    <div class="text-xs text-yellow-400 tracking-wider">音頻調運</div>
+                </div>
+            </div>
+            
+            <div class="hidden md:flex space-x-6">
+                <a href="index.html" class="hover:text-red-400 transition duration-300">首頁</a>
+                <a href="#" class="text-yellow-400 font-semibold">技術原理</a>
+                <a href="#" class="hover:text-red-400 transition duration-300">產品系統</a>
+                <a href="#" class="hover:text-red-400 transition duration-300">核心優勢</a>
+                <a href="#" class="hover:text-red-400 transition duration-300">用戶見證</a>
+                <a href="#" class="hover:text-red-400 transition duration-300">聯繫我們</a>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <a href="#" class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-4 py-2 rounded-full text-sm font-bold hover:shadow-lg transition">
+                    立即體驗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-24 pb-12 relative overflow-hidden">
+        <div class="ancient-symbol" style="top: 10%; left: 10%;">☯</div>
+        <div class="ancient-symbol" style="top: 60%; right: 10%; animation-delay: 2s;">卦</div>
+        <div class="ancient-symbol" style="top: 30%; right: 30%; animation-delay: 4s;">易</div>
+        
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="section-title mb-6">技術原理</h1>
+            <p class="section-subtitle mb-12">
+                五千年古代音律智慧與現代量子科學的完美融合<br>
+                創造前所未有的個性化運勢調頻體驗
+            </p>
+            
+            <!-- 核心理念展示 -->
+            <div class="max-w-4xl mx-auto">
+                <div class="frequency-display relative">
+                    <div class="frequency-wave"></div>
+                    <div class="frequency-bars">
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                        <div class="freq-bar"></div>
+                    </div>
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <div class="text-4xl font-bold gradient-text mb-2">古韻新聲</div>
+                            <div class="text-lg text-gray-300">Traditional Wisdom × Modern Science</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 歷史文化基礎 -->
+    <section class="section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">歷史文化基礎</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    中華文明五千年來，音律與人體健康、運勢調節的關係一直是重要的研究領域
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-12">
+                <!-- 時間軸 -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-8 gradient-text">歷史發展軌跡</h3>
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">黃帝內經時期</h4>
+                            <p class="text-gray-300 mb-3">約2500年前</p>
+                            <p class="text-gray-400">
+                                記載五音對五臟的調理作用：宮音調脾、商音調肺、角音調肝、徵音調心、羽音調腎。
+                                建立了音律與人體器官對應的基礎理論。
+                            </p>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">春秋戰國</h4>
+                            <p class="text-gray-300 mb-3">約2300年前</p>
+                            <p class="text-gray-400">
+                                《樂記》詳述音樂對人心性情的影響，提出"樂者，天地之和也"的哲學理念。
+                                確立了音律調節情志的理論框架。
+                            </p>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">漢唐盛世</h4>
+                            <p class="text-gray-300 mb-3">約1500年前</p>
+                            <p class="text-gray-400">
+                                道家煉丹術發展音頻共振理論，佛教傳入帶來咒語頻率對意識狀態的調節方法。
+                                音律療法開始系統化發展。
+                            </p>
+                        </div>
+                        
+                        <div class="timeline-item">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-2">明清醫學</h4>
+                            <p class="text-gray-300 mb-3">約400年前</p>
+                            <p class="text-gray-400">
+                                《醫宗金鑑》等醫學典籍進一步完善了音律療法的應用，
+                                形成了完整的理論體系和實踐方法。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 核心理論 -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-8 gradient-text">核心理論體系</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-3">
+                                <i class="fas fa-yin-yang mr-3"></i>五音對五臟理論
+                            </h4>
+                            <div class="grid grid-cols-5 gap-2 mb-4">
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-red-400">宮</div>
+                                    <div class="text-sm text-gray-400">脾土</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-white">商</div>
+                                    <div class="text-sm text-gray-400">肺金</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-green-400">角</div>
+                                    <div class="text-sm text-gray-400">肝木</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-red-500">徵</div>
+                                    <div class="text-sm text-gray-400">心火</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-bold text-blue-400">羽</div>
+                                    <div class="text-sm text-gray-400">腎水</div>
+                                </div>
+                            </div>
+                            <p class="text-gray-300">
+                                根據五行相生相剋理論，不同音律對應不同臟腑，
+                                通過特定頻率的音波刺激，達到調和臟腑功能的效果。
+                            </p>
+                        </div>
+
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-3">
+                                <i class="fas fa-clock mr-3"></i>十二律呂體系
+                            </h4>
+                            <p class="text-gray-300 mb-4">
+                                對應十二時辰、十二月份的能量循環，順應天地節律：
+                            </p>
+                            <div class="grid grid-cols-4 gap-3">
+                                <div class="text-center p-2 bg-gray-800 rounded">
+                                    <div class="text-sm font-bold text-yellow-400">子時</div>
+                                    <div class="text-xs text-gray-400">黃鐘</div>
+                                </div>
+                                <div class="text-center p-2 bg-gray-800 rounded">
+                                    <div class="text-sm font-bold text-yellow-400">丑時</div>
+                                    <div class="text-xs text-gray-400">大呂</div>
+                                </div>
+                                <div class="text-center p-2 bg-gray-800 rounded">
+                                    <div class="text-sm font-bold text-yellow-400">寅時</div>
+                                    <div class="text-xs text-gray-400">太簇</div>
+                                </div>
+                                <div class="text-center p-2 bg-gray-800 rounded">
+                                    <div class="text-sm font-bold text-yellow-400">卯時</div>
+                                    <div class="text-xs text-gray-400">夾鐘</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card p-6">
+                            <h4 class="text-xl font-bold text-yellow-400 mb-3">
+                                <i class="fas fa-globe mr-3"></i>天人合一哲學
+                            </h4>
+                            <p class="text-gray-300">
+                                音律與天體運行、節氣變化的共振關係，認為人體是宇宙的縮影，
+                                通過調和人體頻率與天地頻率的同步，達到身心靈的和諧統一。
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 現代科學驗證 -->
+    <section class="section bg-black bg-opacity-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">現代科學驗證</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    國際科學界對音頻療法的研究取得突破性進展，為古老智慧提供了現代科學依據
+                </p>
+            </div>
+
+            <!-- 研究機構成果 -->
+            <div class="research-grid">
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-rocket"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">NASA太空總署</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">生物節律研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        研究顯示特定頻率能影響人體生物節律，528Hz被稱為"愛的頻率"，
+                        能夠修復DNA並促進細胞再生。40Hz頻率能增強大腦γ波活動。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">特定頻率可調節晝夜節律，改善睡眠品質</div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-atom"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">德國馬克斯·普朗克研究所</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">細胞再生研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        證實音頻對細胞再生的促進作用，特別是174Hz、285Hz、396Hz等頻率
+                        能夠激活細胞自我修復機制，提升免疫系統功能。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">低頻音波能加速傷口癒合，提升細胞活性</div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">日本理化學研究所</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">神經科學研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        發現音頻頻率與大腦神經元活動的對應關係，不同頻率能激活不同腦區，
+                        影響認知能力、情緒狀態和創造力。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">雙耳節拍可同步左右腦，提升專注力</div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">美國國立衛生研究院</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">心理健康研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        確認音頻療法對心理健康的積極影響，能有效減輕焦慮、抑鬱症狀，
+                        提升情緒穩定性和心理韌性。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">音樂療法可降低皮質醇水平，緩解壓力</div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-dna"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">史丹佛大學</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">量子生物學研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        在量子層面研究聲波振動對生物系統的影響，證實了頻率共振
+                        在分子水平上的作用機制。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">量子共振可影響蛋白質摺疊和酵素活性</div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="institution-logo">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">麻省理工學院</h3>
+                    <h4 class="font-semibold text-gray-300 mb-3">頻率療法研究</h4>
+                    <p class="text-gray-400 mb-4">
+                        開發了精確的頻率調節技術，能夠針對不同的生理和心理狀態
+                        進行個性化的音頻治療。
+                    </p>
+                    <div class="bg-gray-800 p-3 rounded">
+                        <div class="text-sm text-yellow-400 font-semibold">核心發現</div>
+                        <div class="text-xs text-gray-400">個性化頻率比通用頻率效果提升300%</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技術融合原理 -->
+    <section class="section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">技術融合原理</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    將古代音律智慧與現代科學技術深度融合，創造出前所未有的個性化調運體系
+                </p>
+            </div>
+
+            <!-- 三大核心原理 -->
+            <div class="tech-grid mb-16">
+                <div class="principle-card">
+                    <div class="principle-icon">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">生物共振理論</h3>
+                    <p class="text-gray-300 mb-4">
+                        人體每個細胞都有其特定的振動頻率，當外部音頻與細胞頻率產生共振時，
+                        能夠激活細胞的自我修復和優化功能。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        <strong>科學依據：</strong>細胞膜電位變化、離子通道調節
+                    </div>
+                </div>
+
+                <div class="principle-card">
+                    <div class="principle-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">神經聲學機制</h3>
+                    <p class="text-gray-300 mb-4">
+                        特定頻率能夠影響大腦神經元的放電模式，調節腦波狀態，
+                        從而影響意識水平、認知能力和情緒狀態。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        <strong>科學依據：</strong>腦電圖監測、神經元同步化現象
+                    </div>
+                </div>
+
+                <div class="principle-card">
+                    <div class="principle-icon">
+                        <i class="fas fa-atom"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">量子場論應用</h3>
+                    <p class="text-gray-300 mb-4">
+                        在量子層面，聲波振動能夠影響人體的生物能量場，
+                        調節分子間的相互作用，實現深層次的能量平衡。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        <strong>科學依據：</strong>量子糾纏效應、場論數學模型
+                    </div>
+                </div>
+            </div>
+
+            <!-- 數據分析展示 -->
+            <div class="data-visual">
+                <div class="data-stream">
+                    <div class="stream-line" style="top: 20%; animation-delay: 0s;"></div>
+                    <div class="stream-line" style="top: 40%; animation-delay: 1s;"></div>
+                    <div class="stream-line" style="top: 60%; animation-delay: 2s;"></div>
+                    <div class="stream-line" style="top: 80%; animation-delay: 3s;"></div>
+                </div>
+                <div class="relative z-10">
+                    <h3 class="text-2xl font-bold gradient-text mb-6">數據維度分析</h3>
+                    <div class="grid md:grid-cols-3 gap-6">
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-yellow-400 mb-2">5.12×10⁹</div>
+                            <div class="text-sm text-gray-300">理論音頻組合數量</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                19,980個基礎頻率 × 20個泛音 × 80個節拍組合 × 8種波形 × 16種調制方式
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-yellow-400 mb-2">10⁶²</div>
+                            <div class="text-sm text-gray-300">用戶數據組合可能性</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                31個維度數據，每個維度平均100種變化
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-3xl font-bold text-yellow-400 mb-2">10⁷¹</div>
+                            <div class="text-sm text-gray-300">總體匹配可能性</div>
+                            <div class="text-xs text-gray-400 mt-2">
+                                超越宇宙原子總數的個性化精度
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 算法流程 -->
+    <section class="section bg-black bg-opacity-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">算法流程</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    先進的AI算法確保每個用戶都能獲得最適合自己的音頻調運方案
+                </p>
+            </div>
+
+            <div class="algorithm-flow">
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">多維數據採集</h3>
+                        <p class="text-gray-300 mb-4">
+                            收集用戶的31個關鍵維度數據，包括基礎生命信息、環境能量場、
+                            個人特質和當前狀態等全方位信息。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">數據類型包括：</div>
+                            <div class="text-xs text-gray-400">
+                                出生時間地點、血型基因、生理週期、居住環境、性格類型、音樂偏好、健康狀況等
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">1</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">傳統理論對應</h3>
+                        <p class="text-gray-300 mb-4">
+                            根據五音對五臟、十二律呂等傳統音律理論，結合用戶的體質特徵
+                            和時間節律，確定基礎調運方向。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">理論應用：</div>
+                            <div class="text-xs text-gray-400">
+                                五行配屬、陰陽平衡、經絡對應、時辰配律、節氣調和
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">2</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">科學模型計算</h3>
+                        <p class="text-gray-300 mb-4">
+                            運用現代科學研究成果，通過生物共振模型、神經聲學算法
+                            和量子場論計算，精確確定最優頻率組合。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">計算模型：</div>
+                            <div class="text-xs text-gray-400">
+                                共振頻率匹配、腦波同步算法、細胞修復頻率、情緒調節模式
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">3</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">AI深度學習</h3>
+                        <p class="text-gray-300 mb-4">
+                            利用深度學習神經網絡，在龐大的可能性空間中尋找最優解，
+                            並根據用戶反饋持續優化算法模型。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">技術特點：</div>
+                            <div class="text-xs text-gray-400">
+                                多層神經網絡、梯度下降優化、強化學習、遷移學習
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">4</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">音頻精確合成</h3>
+                        <p class="text-gray-300 mb-4">
+                            採用高精度數字信號處理技術，合成用戶專屬的音頻文件，
+                            確保頻率準確性和音質完美性。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">技術規格：</div>
+                            <div class="text-xs text-gray-400">
+                                96kHz取樣率、24bit深度、0.1Hz頻率精度、3D空間音效
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">5</div>
+                </div>
+
+                <div class="flow-step">
+                    <div class="step-content">
+                        <h3 class="text-xl font-bold text-yellow-400 mb-3">效果追蹤優化</h3>
+                        <p class="text-gray-300 mb-4">
+                            持續監測用戶使用效果，收集反饋數據，動態調整音頻參數，
+                            實現個性化方案的不斷進化。
+                        </p>
+                        <div class="bg-gray-800 p-3 rounded">
+                            <div class="text-sm text-yellow-400 mb-2">優化機制：</div>
+                            <div class="text-xs text-gray-400">
+                                用戶反饋分析、效果數據統計、自適應調整、版本迭代升級
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step-number">6</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 傳統vs現代對比 -->
+    <section class="section">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">傳統與現代的完美融合</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    聽.Red突破性地將五千年傳統智慧與現代科技完美結合，創造全新的調運體驗
+                </p>
+            </div>
+
+            <div class="comparison-table overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th class="text-left">對比維度</th>
+                            <th class="text-center">傳統音律療法</th>
+                            <th class="text-center">現代音頻技術</th>
+                            <th class="text-center">聽.Red融合方案</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="font-semibold text-yellow-400">理論基礎</td>
+                            <td class="text-center">五音對五臟<br>十二律呂<br>天人合一</td>
+                            <td class="text-center">生物共振<br>神經聲學<br>量子場論</td>
+                            <td class="text-center">古今理論<br>深度融合<br>相互驗證</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold text-yellow-400">個性化程度</td>
+                            <td class="text-center">體質分類<br>有限類型</td>
+                            <td class="text-center">數據驅動<br>統計分析</td>
+                            <td class="text-center">10⁷¹種組合<br>完全個性化</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold text-yellow-400">精確性</td>
+                            <td class="text-center">經驗判斷<br>主觀性強</td>
+                            <td class="text-center">儀器測量<br>客觀精確</td>
+                            <td class="text-center">AI算法<br>0.1Hz精度</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold text-yellow-400">適用性</td>
+                            <td class="text-center">需要專業師傅<br>時間地點限制</td>
+                            <td class="text-center">設備依賴<br>操作複雜</td>
+                            <td class="text-center">隨時隨地<br>即時可用</td>
+                        </tr>
+                        <tr>
+                            <td class="font-semibold text-yellow-400">效果驗證</td>
+                            <td class="text-center">主觀感受<br>難以量化</td>
+                            <td class="text-center">儀器監測<br>數據客觀</td>
+                            <td class="text-center">多維評估<br>持續優化</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 融合優勢 -->
+            <div class="mt-16">
+                <h3 class="text-2xl font-bold gradient-text text-center mb-8">融合優勢</h3>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div class="card p-6">
+                        <h4 class="text-xl font-bold text-yellow-400 mb-4">
+                            <i class="fas fa-balance-scale mr-3"></i>智慧傳承 × 科技創新
+                        </h4>
+                        <p class="text-gray-300">
+                            既保留了傳統音律理論的核心智慧，又運用現代科學技術的精確性，
+                            實現了感性與理性、經驗與數據的完美平衡。
+                        </p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="text-xl font-bold text-yellow-400 mb-4">
+                            <i class="fas fa-sync-alt mr-3"></i>動態適應 × 持續進化
+                        </h4>
+                        <p class="text-gray-300">
+                            傳統理論提供穩定的框架基礎，現代技術實現動態調整和優化，
+                            讓調運方案能夠隨著用戶狀態的變化而持續進化。
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技術展望 -->
+    <section class="section bg-black bg-opacity-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl font-bold gradient-text mb-6">技術展望</h2>
+                <p class="text-xl text-gray-300 max-w-4xl mx-auto">
+                    聽.Red將持續推動傳統文化與現代科技的深度融合，開創調運領域的美好未來
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="card p-6 text-center">
+                    <div class="principle-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">AI智能進化</h3>
+                    <p class="text-gray-300 mb-4">
+                        持續優化深度學習模型，提升個性化匹配精度，
+                        實現更加智能化的調運方案生成。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        預計效果提升：<span class="text-yellow-400 font-bold">300%</span>
+                    </div>
+                </div>
+
+                <div class="card p-6 text-center">
+                    <div class="principle-icon">
+                        <i class="fas fa-vr-cardboard"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-4">沉浸式體驗</h3>
+                    <p class="text-gray-300 mb-4">
+                        結合VR/AR技術，創造全方位的沉浸式調運環境，
+                        讓用戶在虛擬空間中體驗傳統文化的魅力。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        預計推出時間：<span class="text-yellow-400 font-bold">2025年</span>
+                    </div>
+                </div>
+
+                <div class="card p-6 text-center">
+                    <div class="principle-icon">
+                        <i class="fas fa-satellite"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-yellow-400 mb-3">量子通信技術</h3>
+                    <p class="text-gray-300 mb-4">
+                        探索量子通信在音頻調運中的應用，
+                        實現超越物理距離限制的能量傳輸和調節。
+                    </p>
+                    <div class="text-sm text-gray-400">
+                        研發階段：<span class="text-yellow-400 font-bold">概念驗證</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行動召喚 -->
+            <div class="text-center mt-16">
+                <div class="card p-8 max-w-3xl mx-auto bg-gradient-to-br from-red-900 to-yellow-900">
+                    <h3 class="text-2xl font-bold mb-4">體驗未來調運科技</h3>
+                    <p class="text-gray-300 mb-6">
+                        成為聽.Red的先行者，親身體驗傳統智慧與現代科技完美融合的神奇力量。
+                        讓科技成就更好的你，開啟個人運勢優化的新篇章。
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <a href="#" class="bg-gradient-to-r from-yellow-400 to-yellow-600 text-black px-8 py-3 rounded-full font-bold hover:shadow-lg transition">
+                            🚀 立即體驗
+                        </a>
+                        <a href="#" class="bg-gradient-to-r from-red-600 to-red-800 text-white px-8 py-3 rounded-full font-bold hover:shadow-lg transition">
+                            📚 技術文檔
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-8 bg-black border-t border-gray-800">
+        <div class="container mx-auto px-4 text-center">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <div class="logo-symbol"></div>
+                <div class="logo-font text-2xl">Red</div>
+            </div>
+            <p class="text-gray-500 mb-4">
+                融合古代音律智慧與現代科學原理的個性化音頻調運系統
+            </p>
+            <div class="text-sm text-gray-600">
+                © 2024 聽.Red項目團隊. 版權所有
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // 數據可視化動態效果
+        function animateDataStream() {
+            const streamLines = document.querySelectorAll('.stream-line');
+            streamLines.forEach((line, index) => {
+                setTimeout(() => {
+                    line.style.animationDelay = Math.random() * 4 + 's';
+                }, index * 500);
+            });
+        }
+
+        // 頻率條動畫
+        function animateFrequencyBars() {
+            const bars = document.querySelectorAll('.freq-bar');
+            setInterval(() => {
+                bars.forEach(bar => {
+                    const height = Math.random() * 80 + 20;
+                    bar.style.height = height + '%';
+                });
+            }, 1000);
+        }
+
+        // 滾動動畫
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // 初始化動畫
+        document.addEventListener('DOMContentLoaded', () => {
+            animateDataStream();
+            animateFrequencyBars();
+            
+            // 觀察需要動畫的元素
+            document.querySelectorAll('.card, .research-card, .principle-card, .timeline-item').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+                el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+                observer.observe(el);
+            });
+        });
+
+        // 平滑滾動
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // 導航欄滾動效果
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 50) {
+                navbar.style.background = 'rgba(13, 13, 13, 0.98)';
+                navbar.style.boxShadow = '0 5px 30px rgba(204, 41, 54, 0.2)';
+            } else {
+                navbar.style.background = 'rgba(13, 13, 13, 0.95)';
+                navbar.style.boxShadow = 'none';
+            }
+        });
+
+        // 算法流程步驟高亮
+        function highlightFlowSteps() {
+            const steps = document.querySelectorAll('.flow-step');
+            steps.forEach((step, index) => {
+                setTimeout(() => {
+                    step.classList.add('highlight');
+                    setTimeout(() => {
+                        step.classList.remove('highlight');
+                    }, 2000);
+                }, index * 1000);
+            });
+        }
+
+        // 定期執行流程高亮
+        setInterval(highlightFlowSteps, 10000);
+
+        // 添加高亮樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            .flow-step.highlight {
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(212, 175, 55, 0.5);
+                transition: all 0.5s ease;
+            }
+            .flow-step.highlight .step-number {
+                animation: pulse 0.5s ease-in-out;
+            }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.2); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 研究卡片懸浮效果增強
+        document.querySelectorAll('.research-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // 原理卡片旋轉效果
+        document.querySelectorAll('.principle-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const icon = card.querySelector('.principle-icon');
+                icon.style.transform = 'rotateY(360deg)';
+                icon.style.transition = 'transform 0.8s ease';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                const icon = card.querySelector('.principle-icon');
+                icon.style.transform = 'rotateY(0deg)';
+            });
+        });
+
+        // 時間軸項目順序顯示
+        function animateTimeline() {
+            const timelineItems = document.querySelectorAll('.timeline-item');
+            timelineItems.forEach((item, index) => {
+                setTimeout(() => {
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateX(0)';
+                }, index * 300);
+            });
+        }
+
+        // 當時間軸進入視口時觸發動畫
+        const timelineObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateTimeline();
+                    timelineObserver.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        const timeline = document.querySelector('.timeline');
+        if (timeline) {
+            // 初始隱藏時間軸項目
+            document.querySelectorAll('.timeline-item').forEach(item => {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(-50px)';
+                item.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            });
+            timelineObserver.observe(timeline);
+        }
+
+        // 頁面載入完成後的優化
+        window.addEventListener('load', () => {
+            // 預載入關鍵動畫
+            document.body.classList.add('loaded');
+            
+            // 延遲啟動某些動畫以提升性能
+            setTimeout(() => {
+                document.querySelectorAll('.ancient-symbol').forEach(symbol => {
+                    symbol.style.opacity = '0.15';
+                });
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
